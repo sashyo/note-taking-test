@@ -7,6 +7,7 @@ import { TideCloakProvider } from "@tidecloak/react";
 import adapter from "../tidecloakAdapter.json";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import AuthRedirect from "./AuthRedirect";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/auth/redirect" element={<AuthRedirect />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

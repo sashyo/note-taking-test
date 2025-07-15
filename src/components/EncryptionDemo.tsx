@@ -30,7 +30,7 @@ export const EncryptionDemo: React.FC = () => {
     setIsLoading(true);
     try {
       const [encrypted] = await doEncrypt([
-        { data: plainText, tags: ['demo', 'test'] }
+        { data: plainText, tags: ['notes'] }
       ]);
       setEncryptedText(encrypted);
       toast({
@@ -62,7 +62,7 @@ export const EncryptionDemo: React.FC = () => {
     setIsLoading(true);
     try {
       const [decrypted] = await doDecrypt([
-        { encrypted: encryptedText, tags: ['demo', 'test'] }
+        { encrypted: encryptedText, tags: ['notes'] }
       ]);
       setDecryptedText(decrypted);
       toast({

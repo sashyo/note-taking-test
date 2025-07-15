@@ -39,7 +39,7 @@ export const NotesApp: React.FC = () => {
         setIsLoading(true);
         try {
           const [decrypted] = await doDecrypt([
-            { encrypted: selectedNote.encryptedContent, tags: ['notes', 'personal'] }
+            { encrypted: selectedNote.encryptedContent, tags: ['notes'] }
           ]);
           setDecryptedContent(decrypted || 'Failed to decrypt content');
         } catch (error) {
@@ -75,7 +75,7 @@ export const NotesApp: React.FC = () => {
     try {
       // Encrypt the note content using TideCloak
       const [encryptedContent] = await doEncrypt([
-        { data: newNote.content, tags: ['notes', 'personal'] }
+        { data: newNote.content, tags: ['notes'] }
       ]);
 
       const note: Note = {
