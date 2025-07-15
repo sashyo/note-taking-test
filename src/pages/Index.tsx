@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AuthWrapper } from '@/components/AuthWrapper';
 import { NotesApp } from '@/components/NotesApp';
 import { EncryptionDemo } from '@/components/EncryptionDemo';
-import { TideCloakIntegration } from '@/components/TideCloakProvider';
+import { TideCloakIntegration } from '@/components/TideCloakIntegration';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('notes');

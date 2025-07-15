@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Lock, Shield, FileText, Trash2, Edit3 } from 'lucide-react';
+import { Plus, Search, Lock, Shield, FileText, Trash2, Edit3, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useTideCloak } from '@tidecloak/react';
 import { toast } from '@/hooks/use-toast';
 
 interface Note {
   id: string;
   title: string;
-  content: string;
+  encryptedContent: string; // Store encrypted content
   encrypted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -20,28 +21,47 @@ interface Note {
 }
 
 export const NotesApp: React.FC = () => {
+  const { doEncrypt, doDecrypt, getValueFromToken } = useTideCloak();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [decryptedContent, setDecryptedContent] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
 
-  // Mock encryption functions - in real app, use TideCloak's encryption
-  const encryptData = (data: string): string => {
-    // This would use TideCloak's encryption in a real implementation
-    return btoa(data); // Base64 for demo purposes
-  };
+  const userEmail = getValueFromToken('email') || 'user';
 
-  const decryptData = (encryptedData: string): string => {
-    // This would use TideCloak's decryption in a real implementation
-    try {
-      return atob(encryptedData);
-    } catch {
-      return encryptedData;
+  // Decrypt note content when a note is selected
+  useEffect(() => {
+    const decryptNote = async () => {
+      if (selectedNote && selectedNote.encryptedContent) {
+        setIsLoading(true);
+        try {
+          const [decrypted] = await doDecrypt([
+            { encrypted: selectedNote.encryptedContent, tags: ['notes', 'personal'] }
+          ]);
+          setDecryptedContent(decrypted || 'Failed to decrypt content');
+        } catch (error) {
+          console.error('Decryption failed:', error);
+          setDecryptedContent('Failed to decrypt content - check your permissions');
+          toast({
+            title: "Decryption Error",
+            description: "Unable to decrypt note content. Check your TideCloak permissions.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    if (selectedNote) {
+      decryptNote();
     }
-  };
+  }, [selectedNote, doDecrypt]);
 
-  const createNote = () => {
+  const createNote = async () => {
     if (!newNote.title.trim()) {
       toast({
         title: "Error",
@@ -51,23 +71,40 @@ export const NotesApp: React.FC = () => {
       return;
     }
 
-    const note: Note = {
-      id: Date.now().toString(),
-      title: newNote.title,
-      content: encryptData(newNote.content),
-      encrypted: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    };
+    setIsLoading(true);
+    try {
+      // Encrypt the note content using TideCloak
+      const [encryptedContent] = await doEncrypt([
+        { data: newNote.content, tags: ['notes', 'personal'] }
+      ]);
 
-    setNotes(prev => [note, ...prev]);
-    setNewNote({ title: '', content: '', tags: '' });
-    setIsCreating(false);
-    toast({
-      title: "Success",
-      description: "Encrypted note created successfully",
-    });
+      const note: Note = {
+        id: Date.now().toString(),
+        title: newNote.title,
+        encryptedContent,
+        encrypted: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      };
+
+      setNotes(prev => [note, ...prev]);
+      setNewNote({ title: '', content: '', tags: '' });
+      setIsCreating(false);
+      toast({
+        title: "Success",
+        description: "Note encrypted and saved successfully with TideCloak",
+      });
+    } catch (error) {
+      console.error('Encryption failed:', error);
+      toast({
+        title: "Encryption Error",
+        description: "Failed to encrypt note. Check your TideCloak permissions.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteNote = (noteId: string) => {
@@ -150,15 +187,26 @@ export const NotesApp: React.FC = () => {
                 <div className="flex gap-2 pt-2">
                   <Button 
                     onClick={createNote}
+                    disabled={isLoading}
                     className="flex-1 bg-gradient-primary hover:opacity-90"
                   >
-                    <Lock className="h-4 w-4 mr-2" />
-                    Create & Encrypt
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                        Encrypting...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Create & Encrypt
+                      </>
+                    )}
                   </Button>
                   <Button 
                     variant="outline" 
                     onClick={() => setIsCreating(false)}
                     className="flex-1"
+                    disabled={isLoading}
                   >
                     Cancel
                   </Button>
@@ -222,7 +270,7 @@ export const NotesApp: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {decryptData(note.content).substring(0, 100)}...
+                    🔒 Encrypted content - click to decrypt and view
                   </p>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {note.tags.map((tag, index) => (
@@ -258,14 +306,22 @@ export const NotesApp: React.FC = () => {
                     </h2>
                     <p className="text-sm text-muted-foreground flex items-center gap-2">
                       <Lock className="h-3 w-3" />
-                      Encrypted • Last updated {selectedNote.updatedAt.toLocaleDateString()}
+                      TideCloak Encrypted • Last updated {selectedNote.updatedAt.toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Encrypted
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
+                    <Shield className="h-3 w-3 mr-1" />
+                    End-to-End Encrypted
+                  </Badge>
+                  {isLoading && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Decrypting...
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -274,12 +330,21 @@ export const NotesApp: React.FC = () => {
               <Card className="h-full bg-note-bg border-note-border shadow-note">
                 <CardContent className="p-6 h-full">
                   <div className="h-full">
-                    <Textarea
-                      value={decryptData(selectedNote.content)}
-                      readOnly
-                      className="w-full h-full resize-none border-0 bg-transparent text-base leading-relaxed focus:ring-0 focus:outline-none"
-                      placeholder="Your encrypted note content..."
-                    />
+                    {isLoading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                          <p className="text-muted-foreground">Decrypting note with TideCloak...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <Textarea
+                        value={decryptedContent}
+                        readOnly
+                        className="w-full h-full resize-none border-0 bg-transparent text-base leading-relaxed focus:ring-0 focus:outline-none"
+                        placeholder="Decrypted content will appear here..."
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -295,7 +360,7 @@ export const NotesApp: React.FC = () => {
                 Your Secure Vault
               </h3>
               <p className="text-muted-foreground mb-6">
-                Select a note to view its encrypted content, or create a new one to get started.
+                Select a note to decrypt and view its content, or create a new encrypted note with TideCloak.
               </p>
               <Button 
                 onClick={() => setIsCreating(true)}

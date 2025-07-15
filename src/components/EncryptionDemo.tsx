@@ -5,35 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useTideCloak } from '@tidecloak/react';
 import { toast } from '@/hooks/use-toast';
 
 export const EncryptionDemo: React.FC = () => {
+  const { doEncrypt, doDecrypt } = useTideCloak();
   const [plainText, setPlainText] = useState('');
   const [encryptedText, setEncryptedText] = useState('');
   const [decryptedText, setDecryptedText] = useState('');
   const [showEncrypted, setShowEncrypted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock encryption/decryption - replace with TideCloak
-  const encrypt = (text: string): string => {
-    const encrypted = btoa(JSON.stringify({
-      data: text,
-      timestamp: Date.now(),
-      algorithm: 'TideCloak-AES-256'
-    }));
-    return encrypted;
-  };
-
-  const decrypt = (encryptedData: string): string => {
-    try {
-      const parsed = JSON.parse(atob(encryptedData));
-      return parsed.data || 'Invalid encrypted data';
-    } catch {
-      return 'Failed to decrypt';
-    }
-  };
-
-  const handleEncrypt = () => {
+  const handleEncrypt = async () => {
     if (!plainText.trim()) {
       toast({
         title: "Error",
@@ -43,15 +27,29 @@ export const EncryptionDemo: React.FC = () => {
       return;
     }
 
-    const encrypted = encrypt(plainText);
-    setEncryptedText(encrypted);
-    toast({
-      title: "Success",
-      description: "Text encrypted successfully with TideCloak",
-    });
+    setIsLoading(true);
+    try {
+      const [encrypted] = await doEncrypt([
+        { data: plainText, tags: ['demo', 'test'] }
+      ]);
+      setEncryptedText(encrypted);
+      toast({
+        title: "Success",
+        description: "Text encrypted successfully with TideCloak",
+      });
+    } catch (error) {
+      console.error('Encryption failed:', error);
+      toast({
+        title: "Encryption Error",
+        description: "Failed to encrypt text. Check your TideCloak permissions.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDecrypt = () => {
+  const handleDecrypt = async () => {
     if (!encryptedText.trim()) {
       toast({
         title: "Error", 
@@ -61,12 +59,26 @@ export const EncryptionDemo: React.FC = () => {
       return;
     }
 
-    const decrypted = decrypt(encryptedText);
-    setDecryptedText(decrypted);
-    toast({
-      title: "Success",
-      description: "Text decrypted successfully",
-    });
+    setIsLoading(true);
+    try {
+      const [decrypted] = await doDecrypt([
+        { encrypted: encryptedText, tags: ['demo', 'test'] }
+      ]);
+      setDecryptedText(decrypted);
+      toast({
+        title: "Success",
+        description: "Text decrypted successfully",
+      });
+    } catch (error) {
+      console.error('Decryption failed:', error);
+      toast({
+        title: "Decryption Error",
+        description: "Failed to decrypt text. Check your TideCloak permissions.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyToClipboard = async (text: string) => {
@@ -121,10 +133,19 @@ export const EncryptionDemo: React.FC = () => {
               onClick={handleEncrypt}
               className="w-full"
               variant="gradient"
-              disabled={!plainText.trim()}
+              disabled={!plainText.trim() || isLoading}
             >
-              <Lock className="h-4 w-4 mr-2" />
-              Encrypt with TideCloak
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                  Encrypting...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Encrypt with TideCloak
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -215,9 +236,19 @@ export const EncryptionDemo: React.FC = () => {
                 onClick={handleDecrypt}
                 variant="gradient-accent"
                 className="flex-1"
+                disabled={isLoading}
               >
-                <Unlock className="h-4 w-4 mr-2" />
-                Decrypt Message
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-foreground mr-2"></div>
+                    Decrypting...
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="h-4 w-4 mr-2" />
+                    Decrypt Message
+                  </>
+                )}
               </Button>
             </div>
             
