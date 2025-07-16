@@ -1,29 +1,23 @@
 {
-  "realm": "secure-notes",
-  "auth-server-url": "https://your-tidecloak-server.com/auth",
+  "realm": "vibing",
+  "auth-server-url": "http://localhost:8080/",
   "ssl-required": "external",
-  "resource": "secure-notes-client",
+  "resource": "myclient",
   "public-client": true,
   "confidential-port": 0,
-  "enable-cors": true,
-  "cors-max-age": 1000,
-  "cors-allowed-methods": "POST, PUT, DELETE, GET",
-  "cors-allowed-headers": "X-Requested-With, Content-Type, Authorization, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers",
-  "bearer-only": false,
-  "autodetect-bearer-only": false,
-  "connection-pool-size": 20,
-  "socket-timeout-millis": 60000,
-  "connection-timeout-millis": 60000,
-  "connection-ttl-millis": 60000,
-  "disable-trust-manager": false,
-  "allow-any-hostname": false,
-  "truststore": "path/to/truststore.jks",
-  "truststore-password": "password",
-  "client-keystore": "path/to/client-keystore.jks",
-  "client-keystore-password": "password",
-  "client-key-password": "password",
-  "token-minimum-time-to-live": 0,
-  "min-time-between-jwks-requests": 10,
-  "public-key-cache-ttl": 86400,
-  "redirect-rewrite-rules": {}
+  "jwk": {
+    "keys": [
+      {
+        "kid": "hpdmcku_BcrGdFzCb4qEAX7PdzAVPmxC-RueGIf_RtQ",
+        "kty": "OKP",
+        "alg": "EdDSA",
+        "use": "sig",
+        "crv": "Ed25519",
+        "x": "ZiIWY8wQ6pqecgHxDeQwbJmH4xuetwxHF4uDD68TcrY"
+      }
+    ]
+  },
+  "vendorId": "4814466064360904375536806992261791402400424268001853178373058666561751224096",
+  "homeOrkUrl": "https://ork1.tideprotocol.com",
+  "client-origin-auth-http://localhost:3000": "y2DvZUdAfv8TUWfwiTM3VkjLYsEHQxDKixkmEQvXLbPaoCPXC2Z8U1kIFFC+80EbABkPH59QRBdrbU9dn3AhAg=="
 }
