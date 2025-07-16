@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import AuthRedirect from "./AuthRedirect";
 
 const queryClient = new QueryClient();
+const base = import.meta.env.BASE_URL;
 
 const App = () => (
   <TideCloakProvider config={adapter}>
@@ -17,7 +18,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={base}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth/redirect" element={<AuthRedirect />} />
