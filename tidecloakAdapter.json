@@ -1,6 +1,6 @@
 {
-  "realm": "vibing",
-  "auth-server-url": "http://localhost:8080/",
+  "realm": "sasha-vibing",
+  "auth-server-url": "https://login.dauth.me",
   "ssl-required": "external",
   "resource": "myclient",
   "public-client": true,
@@ -8,16 +8,16 @@
   "jwk": {
     "keys": [
       {
-        "kid": "hpdmcku_BcrGdFzCb4qEAX7PdzAVPmxC-RueGIf_RtQ",
+        "kid": "QCjhPgsupKDIEkh0BOE4kpOHMUwQhs8evCzXj97eIsE",
         "kty": "OKP",
         "alg": "EdDSA",
         "use": "sig",
         "crv": "Ed25519",
-        "x": "ZiIWY8wQ6pqecgHxDeQwbJmH4xuetwxHF4uDD68TcrY"
+        "x": "TyeMyD7n14HjjHajwNDYV_rL0o7N5A7fd2laiAShNVU"
       }
     ]
   },
-  "vendorId": "4814466064360904375536806992261791402400424268001853178373058666561751224096",
+  "vendorId": "4508097484073443543438034358804498310109955522041423052741658546984259960248",
   "homeOrkUrl": "https://ork1.tideprotocol.com",
-  "client-origin-auth-http://localhost:3000": "y2DvZUdAfv8TUWfwiTM3VkjLYsEHQxDKixkmEQvXLbPaoCPXC2Z8U1kIFFC+80EbABkPH59QRBdrbU9dn3AhAg=="
+  "client-origin-auth-https://sashyo.github.io": "nL63CWKwIpgZyOruVgBgY0375qmHtljN4u9RygvLdf+nwV5wUg5mKkS/903M98uBiwcVmFNmz8mT+X4XtJPgDg=="
 }
